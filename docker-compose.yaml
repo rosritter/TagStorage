@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  model_converter:
+    container_name: embeddings-model-converter
+    build:
+      context: ./model_converter
+      dockerfile: Dockerfile
+    volumes:
+      - ./fastapi/models:/app/data
+    restart: "no"
+
+  chroma:
+    container_name: embeddings-chroma
+    build: 
+      context: ./chromadb
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - chroma-net
+    depends_on:
+      model_converter:
+        condition: service_completed_successfully
+
+  fastapi:
+    container_name: embeddings-fastapi
+    build:
+      context: .
+      dockerfile: ./fastapi/Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./fastapi/models:/app/models
+    depends_on:
+      model_converter:
+        condition: service_completed_successfully
+      chroma:
+        condition: service_started
+    networks:
+      - chroma-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  chroma-net:
+    name: embeddings-network
+    driver: bridge
+
+volumes:
+  chroma_data:
+    name: embeddings-data
