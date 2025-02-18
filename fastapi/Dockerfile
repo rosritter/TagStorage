@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -23,4 +23,4 @@ RUN mkdir -p /app/models
 EXPOSE 8001
 
 # Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uvicorn", "face:app", "--host", "0.0.0.0", "--port", "8001"]

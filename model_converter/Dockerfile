@@ -1,3 +1,13 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies required for building Python packages
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
 COPY requirements.txt /app/
 
 # Install any needed packages specified in requirements.txt

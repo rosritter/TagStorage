@@ -3,11 +3,15 @@ import numpy as np
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
 from typing import Dict, List, Tuple
+from dotenv import dotenv_values
+
+# Load environment variables as a dictionary
+config = dotenv_values(".env")
 
 class ModelTester:
     def __init__(self):
         self.tokenizer = AutoTokenizer.from_pretrained("data/tokenizer")
-        self.ort_session = onnxruntime.InferenceSession("data/tinybert_model.onnx")
+        self.ort_session = onnxruntime.InferenceSession(f"data/{config.get('ONNX_NAME', 'tinybert_model')}.onnx")
         self.pytorch_model = AutoModelForSequenceClassification.from_pretrained(
             "huawei-noah/TinyBERT_General_4L_312D"
         ).bert

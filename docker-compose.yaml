@@ -1,44 +1,39 @@
-version: '3.8'
-
 services:
   model_converter:
     container_name: embeddings-model-converter
-    build:
-      context: ./model_converter
-      dockerfile: Dockerfile
+    build: 
+      context: model_converter
     volumes:
-      - ./fastapi/models:/app/data
+      - ./fastapi/onnx_model:/app/data
     restart: "no"
 
   chroma:
     container_name: embeddings-chroma
     build: 
-      context: ./chromadb
-      dockerfile: Dockerfile
+      context: chromadb
     ports:
       - "8000:8000"
     volumes:
       - chroma_data:/chroma/chroma
     networks:
       - chroma-net
-    depends_on:
-      model_converter:
-        condition: service_completed_successfully
+    # depends_on:
+      # model_converter:
+        # condition: service_completed_successfully
 
   fastapi:
     container_name: embeddings-fastapi
     build:
-      context: .
-      dockerfile: ./fastapi/Dockerfile
+      context: fastapi
     ports:
       - "8001:8001"
     volumes:
-      - ./fastapi/models:/app/models
-    depends_on:
-      model_converter:
-        condition: service_completed_successfully
-      chroma:
-        condition: service_started
+      - ./fastapi/onnx_model:/app/onnx_model
+    # depends_on:
+      # model_converter:
+        # condition: service_completed_successfully
+      # chroma:
+        # condition: service_started
     networks:
       - chroma-net
     healthcheck:
