@@ -2,7 +2,7 @@
 
 # Create necessary directories and copy .env files
 setup:
-	mkdir -p fastapi/models
+	mkdir -p fastapi/onnx_model
 	cp .env model_converter/
 	cp .env fastapi/
 	cp .env chromadb/
