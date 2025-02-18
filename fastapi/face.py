@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from typing import List
 import os
-from model_utils import get_embeddings, init_chroma_client
+from model_utils import get_embeddings, init_chroma_client, init_model
 from types_module import CollectionCreate, EmbeddingInput, QueryInput
 from dotenv import dotenv_values
 
@@ -10,6 +10,7 @@ config = dotenv_values(".env")
 
 app = FastAPI(title="ChromaDB API")
 
+init_model()
 # Initialize ChromaDB client
 CHROMA_API_ENDPOINT = os.getenv("CHROMA_API_ENDPOINT", "http://embeddings-chroma:8000")
 # Initialize the client with retry logic

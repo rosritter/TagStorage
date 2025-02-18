@@ -2,7 +2,7 @@ import time
 import chromadb
 import onnxruntime as ort
 from transformers import AutoTokenizer
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 from dotenv import dotenv_values
 from urllib.parse import urlparse
@@ -14,6 +14,16 @@ config = dotenv_values(".env")
 MODEL_PATH = Path(*Path(config.get("MODEL_PATH", '')).parts[1:])
 TOKENIZER_PATH = Path(*Path(config.get("TOKENIZER_PATH", '')).parts[1:])
 MODEL_NAME = config.get("MODEL_NAME", "huawei-noah/TinyBERT_General_4L_312D")
+tokenizer: Optional[AutoTokenizer] = None
+ort_session: Optional[ort.InferenceSession] = None
+
+def init_model():
+    # Load ONNX model and tokenizer
+    if not tokenizer:
+        tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH)
+    if not ort_session:
+        ort_session = ort.InferenceSession(str(MODEL_PATH))
+
 
 def init_chroma_client(max_retries=5, retry_delay=5):
     chroma_host = config.get("CHROMA_API_ENDPOINT", "http://embeddings-chroma:8000")
@@ -54,9 +64,6 @@ def init_chroma_client(max_retries=5, retry_delay=5):
             time.sleep(retry_delay)
 
 
-# Load ONNX model and tokenizer
-tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH)
-ort_session = ort.InferenceSession(str(MODEL_PATH))
 
 def get_embeddings(texts: List[str]) -> List[List[float]]:
     # Tokenize texts
