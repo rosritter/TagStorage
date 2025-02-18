@@ -1,10 +1,11 @@
+import time
+import chromadb
 import onnxruntime as ort
 from transformers import AutoTokenizer
 from typing import List
 from pathlib import Path
 from dotenv import dotenv_values
-import time
-import chromadb
+from urllib.parse import urlparse
 
 # Load environment variables as a dictionary
 config = dotenv_values(".env")
@@ -14,38 +15,48 @@ MODEL_PATH = Path(*Path(config.get("MODEL_PATH", '')).parts[1:])
 TOKENIZER_PATH = Path(*Path(config.get("TOKENIZER_PATH", '')).parts[1:])
 MODEL_NAME = config.get("MODEL_NAME", "huawei-noah/TinyBERT_General_4L_312D")
 
-
-
-
-# Initialize ChromaDB client with retry logic
 def init_chroma_client(max_retries=5, retry_delay=5):
-    CHROMA_API_ENDPOINT = config.get("CHROMA_API_ENDPOINT", "http://embeddings-chroma:8000")
+    chroma_host = config.get("CHROMA_API_ENDPOINT", "http://embeddings-chroma:8000")
+    print(f"Attempting to connect to ChromaDB at: {chroma_host}")
+    
+    # Parse the URL properly
+    parsed_url = urlparse(chroma_host)
+    host = parsed_url.hostname or "embeddings-chroma"
+    port = parsed_url.port or 8000
+    
+    print(f"Parsed host: {host}, port: {port}")
     
     for attempt in range(max_retries):
         try:
-            client = chromadb.HttpClient(host=CHROMA_API_ENDPOINT)
-            # Try to get or create default tenant
-            try:
-                client.get_tenant("default_tenant")
-            except Exception:
-                try:
-                    client.create_tenant("default_tenant")
-                except Exception as e:
-                    if "already exists" not in str(e).lower():
-                        raise
+            print(f"Connection attempt {attempt + 1}/{max_retries}")
+            
+            client = chromadb.HttpClient(
+                host=host,
+                port=port,
+                settings=chromadb.Settings(
+                    chroma_client_auth_provider="chromadb.auth.disabled.DisabledAuthClientProvider",
+                    anonymized_telemetry=False
+                )
+            )
+            
+            # Test basic connectivity
+            print("Testing connection with heartbeat...")
+            client.heartbeat()
+            print("Successfully connected to ChromaDB")
+            
             return client
+            
         except Exception as e:
+            print(f"Connection attempt {attempt + 1} failed with error: {str(e)}")
             if attempt == max_retries - 1:
                 raise ValueError(f"Failed to connect to ChromaDB after {max_retries} attempts: {str(e)}")
-            print(f"Attempt {attempt + 1} failed, retrying in {retry_delay} seconds...")
+            print(f"Retrying in {retry_delay} seconds...")
             time.sleep(retry_delay)
 
 
-
-
 # Load ONNX model and tokenizer
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-ort_session = ort.InferenceSession(MODEL_PATH)
+tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH)
+ort_session = ort.InferenceSession(str(MODEL_PATH))
 
 def get_embeddings(texts: List[str]) -> List[List[float]]:
     # Tokenize texts

@@ -1,3 +1,3 @@
 temp
-.env
 fastapi/onnx_model
+*.env

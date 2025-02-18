@@ -1,12 +1,4 @@
 services:
-  model_converter:
-    container_name: embeddings-model-converter
-    build: 
-      context: model_converter
-    volumes:
-      - ./fastapi/onnx_model:/app/data
-    restart: "no"
-
   chroma:
     container_name: embeddings-chroma
     build: 
@@ -16,10 +8,18 @@ services:
     volumes:
       - chroma_data:/chroma/chroma
     networks:
-      - chroma-net
-    # depends_on:
-      # model_converter:
-        # condition: service_completed_successfully
+      - app-network
+    environment:
+      - ALLOW_RESET=true
+      - CHROMA_SERVER_AUTH_PROVIDER=chromadb.auth.disabled.DisabledAuthServerProvider
+      - CHROMA_SERVER_AUTH_CREDENTIALS_PROVIDER=chromadb.auth.disabled.DisabledAuthServerProvider
+      - IS_PERSISTENT=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   fastapi:
     container_name: embeddings-fastapi
@@ -29,13 +29,14 @@ services:
       - "8001:8001"
     volumes:
       - ./fastapi/onnx_model:/app/onnx_model
-    # depends_on:
-      # model_converter:
-        # condition: service_completed_successfully
-      # chroma:
-        # condition: service_started
+    depends_on:
+      chroma:
+        condition: service_healthy
     networks:
-      - chroma-net
+      - app-network
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CHROMA_API_ENDPOINT=http://embeddings-chroma:8000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/docs"]
       interval: 30s
@@ -44,8 +45,7 @@ services:
       start_period: 10s
 
 networks:
-  chroma-net:
-    name: embeddings-network
+  app-network:
     driver: bridge
 
 volumes:
