@@ -12,7 +12,7 @@ app = FastAPI(title="ChromaDB API")
 
 init_model()
 # Initialize ChromaDB client
-CHROMA_API_ENDPOINT = os.getenv("CHROMA_API_ENDPOINT", "http://embeddings-chroma:8000")
+CHROMA_API_ENDPOINT = os.getenv("CHROMA_API_ENDPOINT", "http://chroma:8000")
 # Initialize the client with retry logic
 client = init_chroma_client()
 

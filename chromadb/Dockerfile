@@ -1,4 +1,4 @@
-FROM chromadb/chroma:latest
+FROM chromadb/chroma:0.6.3
 
 # Set only essential environment variables
 ENV CHROMA_SERVER_HOST=0.0.0.0

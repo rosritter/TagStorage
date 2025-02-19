@@ -14,7 +14,7 @@ COPY . .
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV CHROMA_API_ENDPOINT=http://embeddings-chroma:8000
+ENV CHROMA_API_ENDPOINT=http://chroma:8000
 
 # Expose port
 EXPOSE 8001

@@ -1,14 +1,19 @@
 services:
+  model_converter:
+    container_name: embeddings-model-converter
+    build: 
+      context: model_converter
+    volumes:
+      - ./fastapi/onnx_model:/app/data
+    restart: "no"
+
   chroma:
-    container_name: embeddings-chroma
     build: 
       context: chromadb
     ports:
       - "8000:8000"
     volumes:
       - chroma_data:/chroma/chroma
-    networks:
-      - app-network
     environment:
       - ALLOW_RESET=true
       - CHROMA_SERVER_AUTH_PROVIDER=chromadb.auth.disabled.DisabledAuthServerProvider
@@ -22,7 +27,6 @@ services:
       start_period: 5s
 
   fastapi:
-    container_name: embeddings-fastapi
     build:
       context: fastapi
     ports:
@@ -32,21 +36,15 @@ services:
     depends_on:
       chroma:
         condition: service_healthy
-    networks:
-      - app-network
     environment:
       - PYTHONUNBUFFERED=1
-      - CHROMA_API_ENDPOINT=http://embeddings-chroma:8000
+      - CHROMA_API_ENDPOINT=http://chroma:8000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/docs"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-
-networks:
-  app-network:
-    driver: bridge
 
 volumes:
   chroma_data:
