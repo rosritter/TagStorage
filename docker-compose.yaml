@@ -13,7 +13,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - chroma_data:/chroma/chroma
+      - ./chroma_data:/chroma/chroma
     environment:
       - ALLOW_RESET=true
       - CHROMA_SERVER_AUTH_PROVIDER=chromadb.auth.disabled.DisabledAuthServerProvider

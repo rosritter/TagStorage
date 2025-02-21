@@ -1,3 +1,4 @@
 temp
 fastapi/onnx_model
 *.env
+chroma_data
