@@ -12,6 +12,12 @@ make up
 ```
 make clean
 ```
+### Swagger
+
+  localhost:8001/docs
+
+
+
 ##### special for @sergey_koryagin
 
 
