@@ -3,6 +3,7 @@ import time
 import chromadb
 from urllib.parse import urlparse
 import numpy as np
+from types_module import CollectionCreate, EmbeddingInput
 
 class ChromaDB(VectorDB):
     def __init__(self, **kwargs):
@@ -42,14 +43,22 @@ class ChromaDB(VectorDB):
                 print(f"Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
 
-    def delete_db(self, **kwargs):
-        raise NotImplementedError
+    def delete_db(self, collection_name:str, **kwargs):
+        self.client.delete_collection(collection_name)
     
-    def create_db(self, **kwargs):
-        raise NotImplementedError
+    def create_db(self, collection_input:CollectionCreate, **kwargs) -> str:
+        collection = self.client.create_collection(
+                            name=collection_input.name,
+                            metadata=collection_input.metadata
+                        )
+        return collection.name
     
     def get_list_db_names(self, **kwargs):
-        return self.client.list_collections()
+        collections = self.client.list_collections()
+        return {"collections": [
+            {"name": col.name, "metadata": col.metadata} 
+            for col in collections
+        ]}
     
     def get_db(self, collection_name:str, **kwargs):
         collection = self.client.get_collection(collection_name)
@@ -58,11 +67,22 @@ class ChromaDB(VectorDB):
             "metadata": collection.metadata,
             "count": collection.count()
         }
-    def push_item(self, **kwargs):
-        raise NotImplementedError
+    def push_item(self, 
+                  collection_name:str,
+                  embeddings:np.ndarray,
+                  input_data: EmbeddingInput,
+                  **kwargs):
+        collection = self.client.get_collection(collection_name)
+        collection.add(
+            embeddings=embeddings,
+            documents=input_data.texts,
+            ids=input_data.ids,
+            metadatas=input_data.metadatas
+        )
         
-    def delete_item(self, **kwargs):
-        raise NotImplementedError
+    def delete_item(self, collection_name, ids, **kwargs) -> None:
+        collection = self.client.get_collection(collection_name)
+        collection.delete(ids=ids)
 
     def query_items(self, collection_name:str, 
                     query_embeddings:np.ndarray,
