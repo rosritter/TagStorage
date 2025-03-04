@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from typing import List
 import os
 from model_utils import get_embeddings, init_chroma_client, init_model
+from vectordb_utils import init_chroma_client, CLIENT_DB
 from types_module import CollectionCreate, EmbeddingInput, QueryInput
 from dotenv import dotenv_values
 
@@ -10,11 +11,8 @@ config = dotenv_values(".env")
 
 app = FastAPI(title="ChromaDB API")
 
+init_chroma_client()
 init_model()
-# Initialize ChromaDB client
-CHROMA_API_ENDPOINT = os.getenv("CHROMA_API_ENDPOINT", "http://chroma:8000")
-# Initialize the client with retry logic
-client = init_chroma_client()
 
 
 # API endpoints
@@ -89,12 +87,7 @@ async def query_items(collection_name: str, query_input: QueryInput):
 @app.get("/collections/{collection_name}")
 async def get_collection_info(collection_name: str):
     try:
-        collection = client.get_collection(collection_name)
-        return {
-            "name": collection.name,
-            "metadata": collection.metadata,
-            "count": collection.count()
-        }
+        return CLIENT_DB.get_db()
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
