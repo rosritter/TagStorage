@@ -8,6 +8,7 @@ config = dotenv_values(".env")
 # Load the model and tokenizer
 model_name = config.get("MODEL_NAME", "huawei-noah/TinyBERT_General_4L_312D")
 onnx_model_name = config.get("ONNX_NAME", 'tinybert_model')
+max_length = int(config.get("MAX_TOKENS_LENGTH", 512))
 model = AutoModelForSequenceClassification.from_pretrained(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
@@ -24,15 +25,20 @@ class BertWithPooler(torch.nn.Module):
         outputs = self.bert(input_ids, attention_mask)
         return outputs[0], outputs[1]  # Last hidden state and pooler output
 
-# Wrap the model
 wrapped_model = BertWithPooler(bert_model)
 wrapped_model.eval()
 
-# Create a dummy input for ONNX conversion
-dummy_input = tokenizer("This is a sample input", return_tensors="pt")
+dummy_text = "This is a sample input that will be padded or truncated to 512 tokens. " * 20
+dummy_input = tokenizer(
+    dummy_text, 
+    return_tensors="pt", 
+    max_length=512, 
+    truncation=True, 
+    padding='max_length'
+)
 
 # Export the model to ONNX format
-onnx_model_path = f"data/{onnx_model_name}.onnx"
+onnx_model_path = "data/tinybert_model.onnx"
 
 # Create the export arguments dictionary with both outputs
 export_args = {
@@ -40,33 +46,36 @@ export_args = {
     "input_names": ["input_ids", "attention_mask"],
     "output_names": ["last_hidden_state", "pooler_output"],
     "dynamic_axes": {
-        "input_ids": {0: "batch_size"},
-        "attention_mask": {0: "batch_size"},
-        "last_hidden_state": {0: "batch_size"},
+        "input_ids": {0: "batch_size", 1: "sequence_length"},
+        "attention_mask": {0: "batch_size", 1: "sequence_length"},
+        "last_hidden_state": {0: "batch_size", 1: "sequence_length"},
         "pooler_output": {0: "batch_size"}
     },
     "opset_version": 14,
     "do_constant_folding": True
 }
 
-# Try export with training mode off and error checking
 with torch.no_grad():
     inputs = (dummy_input["input_ids"], dummy_input["attention_mask"])
     try:
         torch.onnx.export(wrapped_model, inputs, **export_args)
         print(f"Model converted to ONNX format and saved as {onnx_model_path}")
         
-        # Verify the ONNX model
         onnx_model = onnx.load(onnx_model_path)
         onnx.checker.check_model(onnx_model)
         print("ONNX model verification successful")
         
-        # Save the tokenizer
         tokenizer.save_pretrained("data/tokenizer")
         print("Tokenizer saved as 'data/tokenizer' directory")
-        
-        # Verify outputs
-        test_input = tokenizer("Testing pooler output", return_tensors="pt")
+     
+        test_input = tokenizer(
+            "Testing pooler output", 
+            return_tensors="pt", 
+            max_length=max_length, 
+            truncation=True, 
+            padding='max_length'
+        )
+        print(f'test_input shape {test_input["input_ids"].shape}')
         with torch.no_grad():
             pytorch_outputs = wrapped_model(test_input["input_ids"], test_input["attention_mask"])
             print("\nPyTorch pooler output shape:", pytorch_outputs[1].shape)

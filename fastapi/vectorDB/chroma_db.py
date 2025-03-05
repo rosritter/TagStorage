@@ -10,8 +10,8 @@ class ChromaDB(VectorDB):
         super().__init__(**kwargs)
         
     def load_client(self, **kwargs):
-        max_retries=kwargs.get(max_retries, 5) 
-        retry_delay=kwargs.get(retry_delay, 5)
+        max_retries=kwargs.get("max_retries", 5) 
+        retry_delay=kwargs.get("retry_delay", 5)
 
         chroma_host = kwargs.get("CHROMA_API_ENDPOINT", "http://chroma:8000")
         print(f"Attempting to connect to ChromaDB at: {chroma_host}")
@@ -89,7 +89,7 @@ class ChromaDB(VectorDB):
                     query_input, 
                     **kwargs):
         collection = self.get_db(collection_name=collection_name,
-                                 kwargs=kwargs)
+                                 **kwargs)
         
         return collection.query(
                                 query_embeddings=query_embeddings,

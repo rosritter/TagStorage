@@ -8,7 +8,8 @@ config = dotenv_values(".env")
 MODEL_PATH = Path(*Path(config.get("MODEL_PATH", '')).parts[1:])
 TOKENIZER_PATH = Path(*Path(config.get("TOKENIZER_PATH", '')).parts[1:])
 MODEL_NAME = config.get("MODEL_NAME", "huawei-noah/TinyBERT_General_4L_312D")
-MODEL: EmbedModel
+MAX_TOKENS_LENGTH = int(config.get("MAX_TOKENS_LENGTH", 512))
+MODEL: EmbedModel = None
 
 def init_model():
     # Load ONNX model and tokenizer
@@ -17,7 +18,8 @@ def init_model():
         MODEL = TinyBert(
             model=MODEL_PATH, 
             tokenizer=TOKENIZER_PATH, 
-            MODEL_NAME=MODEL_NAME
+            MODEL_NAME=MODEL_NAME,
+            max_tokens_leght=MAX_TOKENS_LENGTH
             )
     else:
         raise NotImplementedError

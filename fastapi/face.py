@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 import os
-from model_utils import get_embeddings, init_chroma_client, init_model
+from model_utils import get_embeddings, init_model
 from vectordb_utils import init_chroma_client, CLIENT_DB
 from types_module import CollectionCreate, EmbeddingInput, QueryInput
 from dotenv import dotenv_values
@@ -8,9 +8,9 @@ from dotenv import dotenv_values
 # Load environment variables as a dictionary
 config = dotenv_values(".env")
 
-app = FastAPI(title="ChromaDB API")
+app = FastAPI(title="ChromaDB API") 
 
-init_chroma_client()
+# init_chroma_client()
 init_model()
 
 

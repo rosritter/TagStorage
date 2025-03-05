@@ -18,7 +18,7 @@ class ModelTester:
         self.pytorch_model.eval()
         
         # Get the input shape from the ONNX model
-        self.max_length = self.ort_session.get_inputs()[0].shape[1]
+        self.max_length = int(config.get("MAX_TOKENS_LENGTH", 512)) 
         print(f"ONNX model max sequence length: {self.max_length}")
         
         # Print ONNX model output names
