@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 import os
 from model_utils import get_embeddings, init_model
 from vectordb_utils import init_chroma_client, CLIENT_DB
+init_chroma_client()
+from vectordb_utils import CLIENT_DB
 from types_module import CollectionCreate, EmbeddingInput, QueryInput
 from dotenv import dotenv_values
 
@@ -10,7 +12,7 @@ config = dotenv_values(".env")
 
 app = FastAPI(title="ChromaDB API") 
 
-# init_chroma_client()
+
 init_model()
 
 
@@ -18,7 +20,8 @@ init_model()
 @app.post("/collections/")
 async def create_collection(collection_input: CollectionCreate):
     try:
-        collection_name = CLIENT_DB.create_db(collection_input=collection_name)
+        print(collection_input)
+        collection_name = CLIENT_DB.create_db(collection_input=collection_input)
         return {"message": f"Collection {collection_name} created successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -59,6 +62,7 @@ async def delete_items(collection_name: str, ids: list[str]):
 async def query_items(collection_name: str, query_input: QueryInput):
     try:
         query_embeddings = get_embeddings(query_input.texts)
+        print('here!')
         results = CLIENT_DB.query_items(
                             collection_name=collection_name,
                             query_embeddings=query_embeddings,
@@ -80,13 +84,16 @@ async def query_items(collection_name: str, query_input: QueryInput):
 @app.get("/collections/{collection_name}")
 async def get_collection_info(collection_name: str):
     try:
-        return CLIENT_DB.get_db(collection_name=collection_name)
+        return CLIENT_DB.get_db_info(collection_name=collection_name)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
 @app.get("/collections")
 async def list_collections():
     try:
-        return CLIENT_DB.get_list_db_names()
+        collections = CLIENT_DB.get_list_db_names()
+        return {
+            "collections" : collections
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

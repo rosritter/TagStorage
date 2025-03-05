@@ -49,24 +49,26 @@ class ChromaDB(VectorDB):
     def create_db(self, collection_input:CollectionCreate, **kwargs) -> str:
         collection = self.client.create_collection(
                             name=collection_input.name,
-                            metadata=collection_input.metadata
+                            # metadata=collection_input.metadata
                         )
         return collection.name
     
     def get_list_db_names(self, **kwargs):
         collections = self.client.list_collections()
-        return {"collections": [
-            {"name": col.name, "metadata": col.metadata} 
-            for col in collections
-        ]}
+        return collections
     
     def get_db(self, collection_name:str, **kwargs):
         collection = self.client.get_collection(collection_name)
+        return collection
+
+    def get_db_info(self, collection_name:str, **kwargs):
+        collection = self.get_db(collection_name)
         return {
             "name": collection.name,
-            "metadata": collection.metadata,
+            # "metadata": collection.metadata,
             "count": collection.count()
         }
+
     def push_item(self, 
                   collection_name:str,
                   embeddings:np.ndarray,
@@ -77,7 +79,7 @@ class ChromaDB(VectorDB):
             embeddings=embeddings,
             documents=input_data.texts,
             ids=input_data.ids,
-            metadatas=input_data.metadatas
+            # metadatas=input_data.metadatas
         )
         
     def delete_item(self, collection_name, ids, **kwargs) -> None:
@@ -90,9 +92,14 @@ class ChromaDB(VectorDB):
                     **kwargs):
         collection = self.get_db(collection_name=collection_name,
                                  **kwargs)
-        
+        print('here2!')
+        print(collection)
         return collection.query(
                                 query_embeddings=query_embeddings,
                                 n_results=query_input.n_results,
-                                include=['documents', 'metadatas', 'distances']
+                                include=[
+                                    'documents', 
+                                    # 'metadatas', 
+                                    'distances'
+                                    ]
                                 )

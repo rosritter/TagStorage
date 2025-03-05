@@ -20,6 +20,9 @@ class VectorDB(ABC):
     
     def get_db(self, **kwargs):
         raise NotImplementedError
+
+    def get_db_info(self, **kwargs):
+        raise NotImplementedError
     
     def push_item(self, **kwargs):
         raise NotImplementedError
