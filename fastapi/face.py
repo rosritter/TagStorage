@@ -7,6 +7,7 @@ from vectordb_utils import CLIENT_DB
 from types_module import CollectionCreate, EmbeddingInput, QueryInput
 from dotenv import dotenv_values
 
+EPS = 1e-10
 # Load environment variables as a dictionary
 config = dotenv_values(".env")
 
@@ -49,9 +50,9 @@ async def add_items(collection_name: str, input_data: EmbeddingInput):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.delete("/collections/{collection_name}/delete")
-async def delete_items(collection_name: str, ids: list[str]):
+async def delete_items(collection_name: str, ids: EmbeddingInput):
     try:
-        CLIENT_DB.delete_items(
+        CLIENT_DB.delete_item(
             collection_name=collection_name,
             ids=ids)
         return {"message": f"Deleted items with ids {ids} from collection {collection_name}"}
@@ -62,7 +63,6 @@ async def delete_items(collection_name: str, ids: list[str]):
 async def query_items(collection_name: str, query_input: QueryInput):
     try:
         query_embeddings = get_embeddings(query_input.texts)
-        print('here!')
         results = CLIENT_DB.query_items(
                             collection_name=collection_name,
                             query_embeddings=query_embeddings,
@@ -73,7 +73,7 @@ async def query_items(collection_name: str, query_input: QueryInput):
         if 'distances' in results:
             max_distance = max(max(distances) for distances in results['distances'])
             results['scores'] = [
-                [1 - (d / max_distance) for d in distances]
+                [1 - (d / (max_distance + EPS)) for d in distances]
                 for distances in results['distances']
             ]
             

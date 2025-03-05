@@ -11,9 +11,12 @@ setup:
 build:
 	docker compose build
 
+spawn_model:
+	docker compose up model_converter
+	
 # Start services
 up:
-	docker compose up -d
+	docker compose up -d chroma fastapi
 
 # Stop services
 down:

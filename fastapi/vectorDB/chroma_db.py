@@ -74,7 +74,7 @@ class ChromaDB(VectorDB):
                   embeddings:np.ndarray,
                   input_data: EmbeddingInput,
                   **kwargs):
-        collection = self.client.get_collection(collection_name)
+        collection = self.get_db(collection_name)
         collection.add(
             embeddings=embeddings,
             documents=input_data.texts,
@@ -83,7 +83,7 @@ class ChromaDB(VectorDB):
         )
         
     def delete_item(self, collection_name, ids, **kwargs) -> None:
-        collection = self.client.get_collection(collection_name)
+        collection = self.get_db(collection_name)
         collection.delete(ids=ids)
 
     def query_items(self, collection_name:str, 
@@ -92,8 +92,6 @@ class ChromaDB(VectorDB):
                     **kwargs):
         collection = self.get_db(collection_name=collection_name,
                                  **kwargs)
-        print('here2!')
-        print(collection)
         return collection.query(
                                 query_embeddings=query_embeddings,
                                 n_results=query_input.n_results,

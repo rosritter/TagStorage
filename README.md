@@ -5,6 +5,7 @@
 ```
 make setup
 make build
+make spawn_model
 make up
 ```
 
@@ -22,7 +23,9 @@ make clean
 
 
 #### :TODO
+  design is very human and easy to use
 
-1. add volume to chroma to store local collections
-2. test endpoints on fastapi
-3. test model
+##### do not rely on (it has not tested yet)
+1.  batching is working correctly
+2.  metadata 
+3.  etc =)
