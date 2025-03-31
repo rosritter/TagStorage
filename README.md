@@ -31,4 +31,5 @@ make clean
 
 ##### bert-like models
 1. [russian](https://huggingface.co/cointegrated/rubert-tiny2)
-2. [english](https://huggingface.co/huawei-noah/TinyBERT_General_4L_312D)
+2. [russian](https://huggingface.co/ai-sage/Giga-Embeddings-instruct)
+3. [english](https://huggingface.co/huawei-noah/TinyBERT_General_4L_312D)
