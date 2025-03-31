@@ -30,4 +30,5 @@ make clean
 3.  etc =)
 
 ##### bert-like models
-russian: https://huggingface.co/cointegrated/rubert-tiny2
+1. (russian)[https://huggingface.co/cointegrated/rubert-tiny2]
+2. (english)[https://huggingface.co/huawei-noah/TinyBERT_General_4L_312D]
