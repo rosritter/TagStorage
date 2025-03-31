@@ -18,7 +18,6 @@ make clean
   localhost:8001/docs
 
 
-
 ##### special for @sergey_koryagin
 
 
@@ -29,3 +28,6 @@ make clean
 1.  batching is working correctly
 2.  metadata 
 3.  etc =)
+
+##### bert-like models
+russian: https://huggingface.co/cointegrated/rubert-tiny2
