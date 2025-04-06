@@ -9,5 +9,3 @@ onnxruntime==1.17.0
 transformers==4.49.0
 numpy==1.26.4
 onnx==1.17.0
---find-links https://download.pytorch.org/whl/torch_stable.html
-torch==2.3.1
