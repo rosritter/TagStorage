@@ -25,5 +25,5 @@ def init_model():
         raise NotImplementedError
 
 def get_embeddings(texts: list[str]) -> list[list[float]]:
-    embeddings = MODEL.get_embeddings(texts=['||'.join(text.split()) for text in texts])
+    embeddings = MODEL.get_embeddings(texts=[text for text in texts])
     return embeddings.tolist()
