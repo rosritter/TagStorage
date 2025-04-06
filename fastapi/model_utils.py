@@ -14,8 +14,8 @@ MODEL: EmbedModel = None
 def init_model():
     # Load ONNX model and tokenizer
     global MODEL
-    if MODEL_NAME in ["huawei-noah/TinyBERT_General_4L_312D",
-                      "cointegrated/rubert-tiny2":
+    if MODEL_NAME in ["huawei-noah/TinyBERT_General_4L_312D",\
+                      "cointegrated/rubert-tiny2"]:
         MODEL = TinyBert(
             model=MODEL_PATH, 
             tokenizer=TOKENIZER_PATH, 
