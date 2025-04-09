@@ -4,6 +4,7 @@ import chromadb
 from urllib.parse import urlparse
 import numpy as np
 from types_module import CollectionCreate, EmbeddingInput
+from model_utils import get_text_content
 
 class ChromaDB(VectorDB):
     def __init__(self, **kwargs):
@@ -75,9 +76,11 @@ class ChromaDB(VectorDB):
                   input_data: EmbeddingInput,
                   **kwargs):
         collection = self.get_db(collection_name)
+        # Преобразуем ListEntityItem в строки
+        documents = [get_text_content(text) for text in input_data.texts]
         collection.add(
             embeddings=embeddings,
-            documents=input_data.texts,
+            documents=documents,  # Используем преобразованные строки
             ids=input_data.ids,
             # metadatas=input_data.metadatas
         )
@@ -92,6 +95,9 @@ class ChromaDB(VectorDB):
                     **kwargs):
         collection = self.get_db(collection_name=collection_name,
                                  **kwargs)
+        # Преобразуем ListEntityItem в строки, если они есть в запросе
+        documents = [get_text_content(text) for text in query_input.texts] if hasattr(query_input.texts[0], 'body') else query_input.texts
+        
         return collection.query(
                                 query_embeddings=query_embeddings,
                                 n_results=query_input.n_results,

@@ -31,49 +31,59 @@ def init_model():
     else:
         raise NotImplementedError
 
-def get_text_content(content: ListEntityItem):
-    return content.title + "||" +\
-    "||".join(content.tags) + "||" +\
-    content.body
-
-    
+def get_text_content(content: ListEntityItem) -> str:
+    parts = []
+    if content.title:
+        parts.append(content.title)
+    if content.tags:
+        parts.extend(content.tags)
+    if content.body:
+        parts.append(content.body)
+    return " || ".join(parts)
 
 def get_embeddings(texts: List[ListEntityItem]) -> list[list[float]]:
-    embeddings = MODEL.get_embeddings(texts=[map(get_text_content, text) for text in texts])
+    # Преобразуем каждый ListEntityItem в строку
+    text_contents = [get_text_content(text) for text in texts]
+    embeddings = MODEL.get_embeddings(texts=text_contents)
     return embeddings.tolist()
 
-
 def get_embeddings_mean(texts: List[ListEntityItem]) -> List[List[float]]:
-    # ListEntityItem example
-    '''
-    "
-    Tags: tag_1||tag_2||..||tag_n
-    Description: description_text
-    etc: ...
-    "
-    '''
-    
     output = []
     for text in texts:
-        weights = []
         query = []
+        weights = []
+        
+        # Собираем все части текста и их веса
         if text.body:
             query.append(text.body)
-            weights.append(1)
+            weights.append(1.0)
         if text.title:
             query.append(text.title)
-            weights.append(1)
-        if len(text.tags) > 0:
-            query += text.tags
-            weights.append([1 / len(text.tags)] * len(text.tags))
+            weights.append(1.0)
+        if text.tags:
+            query.extend(text.tags)
+            # Для каждого тега добавляем уменьшенный вес
+            tag_weight = 1.0 / len(text.tags) if text.tags else 0
+            weights.extend([tag_weight] * len(text.tags))
         
-        if not len(query):
-            raise Exception(f'400, Bad request no input for query')
-        else:
-            embeddings = MODEL.get_embeddings(query)
-            normed_embeddings = [np.linalg.norm(emb, ord=2) for emb in embeddings]
-            # sum(softmax([1, 1, 0.33, 0.33, 0.33])) == 1
-            weights = softmax(np.array(weights)).reshape(-1, 1)
-            output.append(np.sum(normed_embeddings * weights, axis=0))
+        if not query:
+            raise ValueError('No input content provided for embedding generation')
+            
+        # Получаем эмбеддинги для всех частей
+        embeddings = MODEL.get_embeddings(query)
+        # Нормализуем веса через softmax
+        weights = np.array(weights)
+        weights = softmax(weights)
+        
+        # Вычисляем взвешенное среднее эмбеддингов
+        weighted_embeddings = np.array(embeddings) * weights[:, np.newaxis]
+        mean_embedding = np.sum(weighted_embeddings, axis=0)
+        
+        # Нормализуем результирующий вектор
+        norm = np.linalg.norm(mean_embedding)
+        if norm > 0:
+            mean_embedding = mean_embedding / norm
+            
+        output.append(mean_embedding.tolist())
 
     return output
