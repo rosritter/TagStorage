@@ -1,13 +1,13 @@
 from fastapi import FastAPI, HTTPException
-import os
-from model_utils import get_embeddings, init_model
+from model_utils import get_embeddings, init_model, get_embeddings_mean
 from vectordb_utils import init_chroma_client, CLIENT_DB
 init_chroma_client()
 from vectordb_utils import CLIENT_DB
-from types_module import CollectionCreate, EmbeddingInput, QueryInput
+from types_module import CollectionCreate, EmbeddingInput, StructuredQueryInput
 from dotenv import dotenv_values
+from services import add_items_t, query_items_t
 
-EPS = 1e-10
+
 # Load environment variables as a dictionary
 config = dotenv_values(".env")
 
@@ -36,18 +36,17 @@ async def delete_collection(collection_name: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 @app.post("/collections/{collection_name}/add")
-async def add_items(collection_name: str, input_data: EmbeddingInput):
-    try:
+async def add_items(collection_name: str, input_data: EmbeddingInput, method: str='default'):
+    get_embeddings_function = get_embeddings
+    if method == 'mean':
+        get_embeddings_function = get_embeddings_mean
         
-        embeddings = get_embeddings(input_data.texts)
-        CLIENT_DB.push_item(
-                    collection_name=collection_name,
-                    embeddings=embeddings,
-                    input_data=input_data,
+    return add_items_t(
+            collection_name=collection_name, 
+            input_data=input_data, 
+            CLIENT_DB=CLIENT_DB, 
+            get_embeddings=get_embeddings_function
                     )
-        return {"message": f"Added {len(input_data.texts)} items to collection {collection_name}"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
 
 @app.delete("/collections/{collection_name}/delete")
 async def delete_items(collection_name: str, ids: EmbeddingInput):
@@ -59,27 +58,19 @@ async def delete_items(collection_name: str, ids: EmbeddingInput):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/collections/{collection_name}/query")
-async def query_items(collection_name: str, query_input: QueryInput):
-    try:
-        query_embeddings = get_embeddings(query_input.texts)
-        results = CLIENT_DB.query_items(
-                            collection_name=collection_name,
-                            query_embeddings=query_embeddings,
-                            query_input=query_input
-                            ) 
+async def query_items(collection_name: str, query_input: StructuredQueryInput, method: str='default'):
+    get_embeddings_function = get_embeddings
+    if method == 'mean':
+        get_embeddings_function = get_embeddings_mean
         
-        # Convert distances to similarity scores (1 - normalized_distance)
-        if 'distances' in results:
-            max_distance = max(max(distances) for distances in results['distances'])
-            results['scores'] = [
-                [1 - (d / (max_distance + EPS)) for d in distances]
-                for distances in results['distances']
-            ]
-            
-        return results
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return query_items_t(
+        collection_name=collection_name,
+        query_input=query_input,
+        CLIENT_DB=CLIENT_DB,
+        get_embeddings=get_embeddings_function
+    )
 
 @app.get("/collections/{collection_name}")
 async def get_collection_info(collection_name: str):

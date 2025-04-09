@@ -6,6 +6,8 @@ services:
     volumes:
       - ./fastapi/onnx_model:/app/data
     restart: "no"
+    env_file:
+      - .env
 
   chroma:
     build: 
@@ -45,7 +47,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    env_file:
+        - .env
 
+        
 volumes:
   chroma_data:
     name: embeddings-data
