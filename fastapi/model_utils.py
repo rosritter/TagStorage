@@ -67,7 +67,7 @@ def get_embeddings_mean(texts: List[ListEntityItem]) -> List[List[float]]:
             query += text.tags
             weights.append([1 / len(text.tags)] * len(text.tags))
         
-        if len(query):
+        if not len(query):
             raise Exception(f'400, Bad request no input for query')
         else:
             embeddings = MODEL.get_embeddings(query)
