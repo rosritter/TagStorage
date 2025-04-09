@@ -2,7 +2,7 @@ from pathlib import Path
 from dotenv import dotenv_values
 from model.base_embedding_model import EmbedModel
 from model.tinybert_model import TinyBert
-from types_module import EntityItem, ListEntityItem
+from types_module import ListEntityItem
 from typing import List
 import numpy as np
 
