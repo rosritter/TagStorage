@@ -43,11 +43,6 @@ def get_embeddings(texts: List[ListEntityItem]) -> list[list[float]]:
     return embeddings.tolist()
 
 
-
-def normalize_L2(vec: np.nda):
-    pass
-
-
 def get_embeddings_mean(texts: List[ListEntityItem]) -> List[List[float]]:
     # ListEntityItem example
     '''
