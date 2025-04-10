@@ -29,7 +29,7 @@ class TinyBert(EmbedModel):
             texts,
             padding=True,
             truncation=True,
-            max_length=512,
+            max_length=512,    # :TODO depend max_length from model2model
             return_tensors='np'
         )
         # Get embeddings from ONNX model
